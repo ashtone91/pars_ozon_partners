@@ -2,8 +2,6 @@ import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from psycopg2 import Error
 
-# conn = psycopg2.connect(dbname='postgres', user='postgres', password='1111', host='127.0.0.1')
-
 try:
     # Подключение к серверу
     connection = psycopg2.connect(user='postgres', password='1111', host='127.0.0.1')
