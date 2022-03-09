@@ -1,26 +1,30 @@
 import requests
 import json
 import configparser
+from create_db import CreateBase
+from AddDataTable import AddDataTable
 
 
-# Создадим объект парсера параметров настройки
+CreateBase()
+
+# РЎРѕР·РґР°РґРёРј РѕР±СЉРµРєС‚ РїР°СЂСЃРµСЂР° РїР°СЂР°РјРµС‚СЂРѕРІ РЅР°СЃС‚СЂРѕР№РєРё
 config = configparser.ConfigParser()
 config.read("settings.ini")
 
-# Зададим адрес парсинга
+# Р—Р°РґР°РґРёРј Р°РґСЂРµСЃ РїР°СЂСЃРёРЅРіР°
 url = "https://api-seller.ozon.ru" 
 method = config["Ozon-API"]["method"]
 print(url + method)
 
-# в head записываем настройки парсинга
+# РІ head Р·Р°РїРёСЃС‹РІР°РµРј РЅР°СЃС‚СЂРѕР№РєРё РїР°СЂСЃРёРЅРіР°
 head = {
   "Client-Id": config["Ozon-API"]["Client-Id"], 
   "Api-Key": config["Ozon-API"]["Api-Key"],
   "Content-Type": "application/json"
 }
 
-# Тело по необходимости можем менять, в зависимости от того, что парсим
-# структуру берем из офф источников https://docs.ozon.ru/api/seller/#operation/AnalyticsAPI_AnalyticsGetStockOnWarehouses
+# РўРµР»Рѕ РїРѕ РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РјРѕР¶РµРј РјРµРЅСЏС‚СЊ, РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ С‚РѕРіРѕ, С‡С‚Рѕ РїР°СЂСЃРёРј
+# СЃС‚СЂСѓРєС‚СѓСЂСѓ Р±РµСЂРµРј РёР· РѕС„С„ РёСЃС‚РѕС‡РЅРёРєРѕРІ https://docs.ozon.ru/api/seller/#operation/AnalyticsAPI_AnalyticsGetStockOnWarehouses
 body = {
   "limit": "100",
   "offset": "0"
@@ -31,13 +35,12 @@ response = requests.post(url + method, headers=head, data=body)
 
 data = response.json()
 
-# Парсим полученный json, выводим следующую структуру:
+# РџР°СЂСЃРёРј РїРѕР»СѓС‡РµРЅРЅС‹Р№ json, РІС‹РІРѕРґРёРј СЃР»РµРґСѓСЋС‰СѓСЋ СЃС‚СЂСѓРєС‚СѓСЂСѓ:
 #
-# Идентификатор склада:
-# Категория - Название категории. - Идентификатор товара в системе продавца. - Количество товаров не подлежащих реализации.
+# РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ СЃРєР»Р°РґР°:
+# РљР°С‚РµРіРѕСЂРёСЏ - РќР°Р·РІР°РЅРёРµ РєР°С‚РµРіРѕСЂРёРё. - РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ С‚РѕРІР°СЂР° РІ СЃРёСЃС‚РµРјРµ РїСЂРѕРґР°РІС†Р°. - РљРѕР»РёС‡РµСЃС‚РІРѕ С‚РѕРІР°СЂРѕРІ РЅРµ РїРѕРґР»РµР¶Р°С‰РёС… СЂРµР°Р»РёР·Р°С†РёРё.
 for sklad in data['wh_items']:
-  print('\n','\n')
-  print(sklad['name'], ':', '\n')
   for articul in sklad['items']:
-    print(articul['category'],'-', articul['title'],'-',articul['offer_id'],'-',articul['stock']['for_sale'], 'pcs')
-
+    AddDataTable(sklad['name'], articul['category'], articul['barcode'], \
+                 articul['sku'], articul['stock']['for_sale'], \
+                 articul['stock']['not_for_sale'])
