@@ -1,10 +1,6 @@
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from psycopg2 import Error
-import requests
-import json
-import configparser
-
 
 def AddDataTable(name_sklad, category, barcode, sku, for_sale, not_for_sale):
     try:
