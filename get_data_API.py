@@ -18,7 +18,7 @@ def ReadDataAPI(body_in, url_in, method_in, head_in):
     dt_now = datetime.now()
     current_time = dt_now.strftime("%H:%M:%S")
     current_data = dt_now.strftime("%w/%m/%Y")
-    control = False
+    # control = False   
 
     response = requests.post(url_in + method_in, headers=head_in, data=body_in)
 
@@ -34,13 +34,9 @@ def ReadDataAPI(body_in, url_in, method_in, head_in):
                     articul['stock']['not_for_sale'], current_time, current_data)
 
     print("An entry was made for - ", current_data, "-", current_time)
-    # time.sleep(30)
+    time.sleep(30)
 
-# ReadDataAPI(body, url, method, head)
 
-# Осуществляем чтение и запись данных каждые 60 сек.
-# timer = threading.Timer(60, ReadDataAPI, args=(body, url, method, head), kwargs=None)
-# timer.start()
 if __name__ == "__main__":
 
   CreateBase()
@@ -68,6 +64,5 @@ if __name__ == "__main__":
     "offset": "0"
   }
 
-  ReadDataAPI(body, url, method, head)
-  # readData = threading.Thread(target=ReadDataAPI,  args=(body, url, method, head), daemon=None)
-  # readData.start()
+  readData = threading.Thread(target=ReadDataAPI,  args=(body, url, method, head), daemon=None)
+  readData.start()
