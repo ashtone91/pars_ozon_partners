@@ -48,7 +48,9 @@ def CreateTable():
                             barcode VARCHAR,        \
                             sku INTEGER,         \
                             for_sale INTEGER,    \
-                            not_for_sale INTEGER)"
+                            not_for_sale INTEGER,  \
+                            date_read VARCHAR,      \
+                            time_read VARCHAR)"
 
         cursor.execute("SELECT * FROM pg_catalog.pg_tables WHERE schemaname = 'leftovers_in_warehouse'")
         exists = cursor.fetchone()

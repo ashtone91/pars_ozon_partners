@@ -2,7 +2,7 @@ import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from psycopg2 import Error
 
-def AddDataTable(name_sklad, category, barcode, sku, for_sale, not_for_sale):
+def AddDataTable(name_sklad, category, barcode, sku, for_sale, not_for_sale, current_time, current_data):
     try:
         # Подключение к базе данных
         connection = psycopg2.connect(user='postgres', password='1111', host='127.0.0.1', database="ozon_pars", port="5432")
@@ -17,9 +17,13 @@ def AddDataTable(name_sklad, category, barcode, sku, for_sale, not_for_sale):
                                 + barcode + "', "      \
                                 + str(sku) + ", "          \
                                 + str(for_sale) + ", "     \
-                                + str(not_for_sale) + ")" 
+                                + str(not_for_sale) + ", '" \
+                                + current_data + "', '" \
+                                + current_time + "')" 
 
         cursor.execute(sql_add_data)
+
+
         
     except (Exception, Error) as error:
         print("Error ADD DATA to PostgresSQL", error)

@@ -12,18 +12,13 @@ def ReadDataAPI(body_in, url_in, method_in, head_in):
 
   body_in = json.dumps(body_in)
 
-  dt_now = datetime.now()
-  current_time = dt_now.strftime("%H:%M:%S")
-  current_data = dt_now.strftime("%w:%m:%Y")
-
-  print(current_time,current_data)
-
   control = True
   while control:
 
     dt_now = datetime.now()
     current_time = dt_now.strftime("%H:%M:%S")
-    current_data = dt_now.strftime("%w:%m:%Y")
+    current_data = dt_now.strftime("%w/%m/%Y")
+    control = False
 
     response = requests.post(url_in + method_in, headers=head_in, data=body_in)
 
@@ -36,12 +31,10 @@ def ReadDataAPI(body_in, url_in, method_in, head_in):
       for articul in sklad['items']:
         AddDataTable(sklad['name'], articul['category'], articul['barcode'], \
                     articul['sku'], articul['stock']['for_sale'], \
-                    articul['stock']['not_for_sale'])
+                    articul['stock']['not_for_sale'], current_time, current_data)
 
     print("An entry was made for - ", current_data, "-", current_time)
-
-
-    time.sleep(20)
+    # time.sleep(30)
 
 # ReadDataAPI(body, url, method, head)
 
@@ -75,5 +68,6 @@ if __name__ == "__main__":
     "offset": "0"
   }
 
-  readData = threading.Thread(target=ReadDataAPI,  args=(body, url, method, head), daemon=None)
-  readData.start()
+  ReadDataAPI(body, url, method, head)
+  # readData = threading.Thread(target=ReadDataAPI,  args=(body, url, method, head), daemon=None)
+  # readData.start()
