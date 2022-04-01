@@ -1,43 +1,68 @@
 import requests
 import json
 import configparser
+from create_db import CreateBase
+from AddDataTable import AddDataTable
+import threading
+import time
+from datetime import datetime
 
 
-# Создадим объект парсера параметров настройки
-config = configparser.ConfigParser()
-config.read("settings.ini")
+def ReadDataAPI(body_in, url_in, method_in, head_in):
 
-# Зададим адрес парсинга
-url = "https://api-seller.ozon.ru" 
-method = config["Ozon-API"]["method"]
-print(url + method)
+  body_in = json.dumps(body_in)
 
-# в head записываем настройки парсинга
-head = {
-  "Client-Id": config["Ozon-API"]["Client-Id"], 
-  "Api-Key": config["Ozon-API"]["Api-Key"],
-  "Content-Type": "application/json"
-}
+  control = True
+  while control:
 
-# Тело по необходимости можем менять, в зависимости от того, что парсим
-# структуру берем из офф источников https://docs.ozon.ru/api/seller/#operation/AnalyticsAPI_AnalyticsGetStockOnWarehouses
-body = {
-  "limit": "100",
-  "offset": "0"
-}
+    dt_now = datetime.now()
+    current_time = dt_now.strftime("%H:%M:%S")
+    current_data = dt_now.strftime("%w/%m/%Y")
+    # control = False   
 
-body = json.dumps(body)
-response = requests.post(url + method, headers=head, data=body)
+    response = requests.post(url_in + method_in, headers=head_in, data=body_in)
 
-data = response.json()
+    data = response.json()
+    # РџР°СЂСЃРёРј РїРѕР»СѓС‡РµРЅРЅС‹Р№ json, РІС‹РІРѕРґРёРј СЃР»РµРґСѓСЋС‰СѓСЋ СЃС‚СЂСѓРєС‚СѓСЂСѓ:
+    #
+    # РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ СЃРєР»Р°РґР°:
+    # РљР°С‚РµРіРѕСЂРёСЏ - РќР°Р·РІР°РЅРёРµ РєР°С‚РµРіРѕСЂРёРё. - РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ С‚РѕРІР°СЂР° РІ СЃРёСЃС‚РµРјРµ РїСЂРѕРґР°РІС†Р°. - РљРѕР»РёС‡РµСЃС‚РІРѕ С‚РѕРІР°СЂРѕРІ РЅРµ РїРѕРґР»РµР¶Р°С‰РёС… СЂРµР°Р»РёР·Р°С†РёРё.
+    for sklad in data['wh_items']:
+      for articul in sklad['items']:
+        AddDataTable(sklad['name'], articul['category'], articul['barcode'], \
+                    articul['sku'], articul['stock']['for_sale'], \
+                    articul['stock']['not_for_sale'], current_time, current_data)
 
-# Парсим полученный json, выводим следующую структуру:
-#
-# Идентификатор склада:
-# Категория - Название категории. - Идентификатор товара в системе продавца. - Количество товаров не подлежащих реализации.
-for sklad in data['wh_items']:
-  print('\n','\n')
-  print(sklad['name'], ':', '\n')
-  for articul in sklad['items']:
-    print(articul['category'],'-', articul['title'],'-',articul['offer_id'],'-',articul['stock']['for_sale'], 'pcs')
+    print("An entry was made for - ", current_data, "-", current_time)
+    time.sleep(30)
 
+
+if __name__ == "__main__":
+
+  CreateBase()
+
+  # РЎРѕР·РґР°РґРёРј РѕР±СЉРµРєС‚ РїР°СЂСЃРµСЂР° РїР°СЂР°РјРµС‚СЂРѕРІ РЅР°СЃС‚СЂРѕР№РєРё
+  config = configparser.ConfigParser()
+  config.read("settings.ini")
+
+  # Р—Р°РґР°РґРёРј Р°РґСЂРµСЃ РїР°СЂСЃРёРЅРіР°
+  url = "https://api-seller.ozon.ru" 
+  method = config["Ozon-API"]["method"]
+  print(url + method)
+
+  # РІ head Р·Р°РїРёСЃС‹РІР°РµРј РЅР°СЃС‚СЂРѕР№РєРё РїР°СЂСЃРёРЅРіР°
+  head = {
+    "Client-Id": config["Ozon-API"]["Client-Id"], 
+    "Api-Key": config["Ozon-API"]["Api-Key"],
+    "Content-Type": "application/json"
+  }
+
+  # РўРµР»Рѕ РїРѕ РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РјРѕР¶РµРј РјРµРЅСЏС‚СЊ, РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ С‚РѕРіРѕ, С‡С‚Рѕ РїР°СЂСЃРёРј
+  # СЃС‚СЂСѓРєС‚СѓСЂСѓ Р±РµСЂРµРј РёР· РѕС„С„ РёСЃС‚РѕС‡РЅРёРєРѕРІ https://docs.ozon.ru/api/seller/#operation/AnalyticsAPI_AnalyticsGetStockOnWarehouses
+  body = {
+    "limit": "100",
+    "offset": "0"
+  }
+
+  readData = threading.Thread(target=ReadDataAPI,  args=(body, url, method, head), daemon=None)
+  readData.start()
